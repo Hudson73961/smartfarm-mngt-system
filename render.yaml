@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: smart-farmer-api
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npx prisma generate && npx prisma migrate deploy && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        value: https://your-frontend-domain.com
+      - key: ADMIN_EMAIL
+        value: admin@smartfarmer.local
+      - key: ADMIN_PASSWORD
+        value: ChangeMe123!
+      - key: WEATHER_API_KEY
+        sync: false
+      - key: WEATHER_LOCATION
+        value: Nairobi,KE
+      - key: OPENWEATHER_BASE_URL
+        value: https://api.openweathermap.org/data/2.5
