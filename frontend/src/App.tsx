@@ -52,6 +52,17 @@ const formatKES = (value: number) =>
 
 const statusColors = ['#2d7d46', '#67a56c', '#ef4444', '#f59e0b'];
 
+async function handleLogout(setUser: (user: User | null) => void, redirectTo: string) {
+  try {
+    await apiFetch('/api/auth/logout', { method: 'POST' });
+  } catch (error) {
+    console.warn('Logout request failed:', error);
+  }
+
+  setUser(null);
+  window.location.assign(redirectTo);
+}
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -81,8 +92,8 @@ function App() {
       <Route path="/login" element={user ? <Navigate to={user.role === 'ADMIN' ? '/admin' : '/dashboard'} replace /> : <LoginPage setUser={setUser} />} />
       <Route path="/admin-login" element={user ? <Navigate to={user.role === 'ADMIN' ? '/admin' : '/dashboard'} replace /> : <AdminLoginPage setUser={setUser} />} />
       <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage setUser={setUser} />} />
-      <Route path="/dashboard" element={user && user.role === 'FARMER' ? <FarmerDashboard user={user} /> : <Navigate to="/login" replace />} />
-      <Route path="/admin" element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} /> : <Navigate to="/admin-login" replace />} />
+      <Route path="/dashboard" element={user && user.role === 'FARMER' ? <FarmerDashboard user={user} setUser={setUser} /> : <Navigate to="/login" replace />} />
+      <Route path="/admin" element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} setUser={setUser} /> : <Navigate to="/admin-login" replace />} />
     </Routes>
   );
 }
@@ -310,7 +321,7 @@ function RegisterPage({ setUser }: { setUser: (user: User | null) => void }) {
   );
 }
 
-function FarmerDashboard({ user }: { user: User }) {
+function FarmerDashboard({ user, setUser }: { user: User; setUser: (user: User | null) => void }) {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
@@ -386,6 +397,7 @@ function FarmerDashboard({ user }: { user: User }) {
               {online ? 'Online' : 'Offline'}
             </span>
             <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">{pendingCount} queued syncs</span>
+            <button className="btn-secondary" onClick={() => handleLogout(setUser, '/login')}>Logout</button>
           </div>
         </header>
 
@@ -489,7 +501,7 @@ function FarmerDashboard({ user }: { user: User }) {
   );
 }
 
-function AdminDashboard({ user }: { user: User }) {
+function AdminDashboard({ user, setUser }: { user: User; setUser: (user: User | null) => void }) {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<Array<{ id: string; name: string; email: string; status: string; createdAt: string }>>([]);
 
@@ -520,7 +532,7 @@ function AdminDashboard({ user }: { user: User }) {
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">{user.name}</span>
-            <button className="btn-secondary" onClick={() => window.location.href = '/'}>Logout</button>
+            <button className="btn-secondary" onClick={() => handleLogout(setUser, '/admin-login')}>Logout</button>
           </div>
         </header>
 
